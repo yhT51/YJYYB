@@ -1,0 +1,15 @@
+SMTP 手动测试说明：
+
+163邮箱 SMTP 信息：
+- 服务器：smtp.163.com
+- 端口：465 (SSL) 或 25/587 (TLS)
+- 需要认证
+
+手动测试方法：
+1. 安装 OpenSSL：openssl version
+2. 连接测试：openssl s_client -connect smtp.163.com:465
+3. 手动 SMTP 对话
+
+当前环境限制导致 Python 脚本无法执行。
+
+建议使用 AgentMail 官方服务。

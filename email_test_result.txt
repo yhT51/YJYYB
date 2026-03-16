@@ -1,0 +1,14 @@
+邮件发送测试结果：
+
+尝试时间：2025-03-13
+
+问题：Python 输出被完全抑制，无法获取执行结果或错误信息。
+
+脚本已创建：D:\XLX\XLXWJ\send_email_v2.py
+配置文件：C:\Users\Administrator\.agentmail\config.json
+
+建议：
+1. 在本地终端手动运行脚本查看详细错误
+2. 检查163邮箱SMTP服务是否真的开启
+3. 验证授权码是否正确
+4. 或使用AgentMail官方服务

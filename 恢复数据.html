@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据恢复工具</title>
+  <style>
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { color: #a78bfa; margin-bottom: 20px; }
+    .section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h2 { color: #fff; font-size: 16px; margin-bottom: 15px; }
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px;
+      color: #e0e0e0;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+    button {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary {
+      background: rgba(255,255,255,0.1);
+    }
+    .info {
+      background: rgba(99,102,241,0.1);
+      border-left: 3px solid #6366f1;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    .success {
+      background: rgba(52,211,153,0.1);
+      border-left: 3px solid #34d399;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #34d399;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 数据恢复工具</h1>
+
+  <div class="info">
+    此工具用于从浏览器的 localStorage 恢复任务看板数据
+  </div>
+
+  <div class="section">
+    <h2>步骤 1：查看本地数据</h2>
+    <p style="margin-bottom: 10px; color: #888;">点击下方按钮查看浏览器中保存的任务数据</p>
+    <button onclick="checkLocalData()">📥 检查本地数据</button>
+  </div>
+
+  <div class="section">
+    <h2>步骤 2：复制数据</h2>
+    <p style="margin-bottom: 10px; color: #888;">将下方文本框中的数据复制出来</p>
+    <textarea id="dataDisplay" readonly placeholder="点击"检查本地数据"后，数据会显示在这里..."></textarea>
+  </div>
+
+  <div class="section">
+    <h2>步骤 3：恢复到服务器</h2>
+    <p style="margin-bottom: 10px; color: #888;">点击下方按钮将数据恢复到服务器</p>
+    <button onclick="restoreToServer()">🔄 恢复到服务器</button>
+    <button class="secondary" onclick="clearConfirm()">🗑️ 清空本地数据</button>
+  </div>
+
+  <div id="message" style="display: none;"></div>
+
+  <script>
+    const LOCAL_KEY = 'yinhao_tasks';
+    const API_BASE = '/api/tasks';
+
+    function showMessage(msg, type = 'info') {
+      const msgDiv = document.getElementById('message');
+      msgDiv.style.display = 'block';
+      msgDiv.className = type === 'success' ? 'success' : 'info';
+      msgDiv.textContent = msg;
+    }
+
+    function checkLocalData() {
+      const data = localStorage.getItem(LOCAL_KEY);
+      if (!data || data === '[]' || data === 'null') {
+        showMessage('⚠️ 本地没有找到任务数据', 'info');
+        document.getElementById('dataDisplay').value = '本地暂无数据';
+      } else {
+        try {
+          const tasks = JSON.parse(data);
+          showMessage(`✅ 找到 ${tasks.length} 条任务数据`, 'success');
+          document.getElementById('dataDisplay').value = JSON.stringify(tasks, null, 2);
+        } catch (e) {
+          showMessage('❌ 数据格式错误', 'info');
+          document.getElementById('dataDisplay').value = data;
+        }
+      }
+    }
+
+    async function restoreToServer() {
+      const data = localStorage.getItem(LOCAL_KEY);
+      if (!data || data === '[]' || data === 'null') {
+        showMessage('⚠️ 本地没有数据可恢复', 'info');
+        return;
+      }
+
+      try {
+        const tasks = JSON.parse(data);
+        const response = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tasks)
+        });
+
+        if (response.ok) {
+          showMessage(`✅ 成功恢复 ${tasks.length} 条任务到服务器！现在可以打开任务看板查看`, 'success');
+        } else {
+          showMessage('❌ 恢复失败，请检查服务器是否运行', 'info');
+        }
+      } catch (e) {
+        showMessage(`❌ 错误: ${e.message}`, 'info');
+      }
+    }
+
+    function clearConfirm() {
+      if (confirm('确定要清空本地数据吗？清空后无法恢复！')) {
+        localStorage.removeItem(LOCAL_KEY);
+        showMessage('✅ 本地数据已清空', 'success');
+        document.getElementById('dataDisplay').value = '';
+      }
+    }
+
+    // 页面加载时自动检查
+    checkLocalData();
+  </script>
+</body>
+</html>
